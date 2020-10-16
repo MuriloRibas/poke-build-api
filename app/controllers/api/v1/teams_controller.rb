@@ -50,7 +50,7 @@ module Api
             private
 
             def team_params
-                params.require(:team).permit(:trainer_id, pokemons: [:name, :type, :front_sprite]) # [] DEFINIR O QUE PODE IR DENTRO DE POKEONS
+                params.require(:team).permit(:trainer_id, pokemons: [:name, :type, :front_sprite], include: [:name, :age, :image, :gender]) # [] DEFINIR O QUE PODE IR DENTRO DE POKEONS
 
             end
 
