@@ -2,14 +2,14 @@ module Api
     module V1
         class TrainersController < ApplicationController
 
-            # @@options = { include: [:teams] }
+            @@options = { include: [:teams] }
 
             protect_from_forgery with: :null_session
 
             def index
                 trainers = Trainer.all 
                 
-                render json: serializer(trainers)
+                render json: serializer(trainers, @@options)
             end
 
             def show
