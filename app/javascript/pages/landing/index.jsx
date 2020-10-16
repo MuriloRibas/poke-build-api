@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
+import styled from 'styled-components';
+import { useHistory } from 'react-router-dom';
 import { Navbar } from '../../components/navbar';
 import { Header } from '../../components/header';
 import { TeamPortrait } from '../../components/team_portrait/index';
 import { PortraitsLayout } from '../../components/portraits_layout';
-import { useHistory } from 'react-router-dom';
-import Axios from 'axios';
-import styled from 'styled-components';
 import { TrainerPortrait } from '../../components/trainer_portrait';
+import { DataContext } from '../../routes/index';
+import { AiOutlineDelete, AiOutlineEdit } from 'react-icons/ai';
+import Axios from 'axios';
 
 const ContainerRadios = styled.div` 
     width: 300px;
@@ -29,25 +31,28 @@ const Label = styled.label`
     justify-content: center;
     align-items: center;
     margin-right: 15px;
+    transition: opacity 0.25s;
     & > * {
         color: white;
+    }
+    &:hover {
+        cursor: pointer;
+        opacity: 0.8;
     }
 `
 
 export const Landing = () => {
     const [contentType, setContentType] = useState('teams')
-
-    const [feed, setFeed] = useState([]);
+    const { teams, trainers } = useContext(DataContext).data
+    // const [feed, setFeed] = useState([]);
     const [loading, setLoading] = useState(false);
-
 
     const history = useHistory()
 
-    const request = (type) => 
-        Axios.get('http://localhost:3000/api/v1/' + type)
+    const requestDelete = (type, id) => 
+        Axios.delete('http://localhost:3000/api/v1/' + type + '/' + id)
             .then(res => {
                 console.log(res)  
-                setFeed(res.data)
                 setLoading(false)
             })
             .catch(err => {
@@ -58,17 +63,9 @@ export const Landing = () => {
     const handleContentType = (e) => setContentType(e.target.value)
 
     const findTrainer = (team, trainers) => {
-        console.log(team)
-        console.log(trainers)
         const result = trainers.filter(el => el.id === team.relationships.trainer.data.id)
         return result[0].attributes
     }
-
-    useEffect(() => {
-        console.log(contentType)
-        setLoading(true)
-        request(contentType)
-    }, [contentType])
 
     return (
         <>
@@ -101,23 +98,37 @@ export const Landing = () => {
 
             {contentType === 'teams' && 
                 <PortraitsLayout>
-                    {!loading && feed.data && feed.data.length > 0 && feed.data[0].type === 'team' && feed.data.map((el, i) =>
+                    {!loading && teams.data && teams.data.length > 0 && teams.data.map((el, i) =>
                         <TeamPortrait
-                            trainer_name={findTrainer(el, feed.included).name}
-                            onClickComp={() => {
-                                const data_trainer = findTrainer(el, feed.included)
-                                return history.push('/team/' + el.id, { data_team: { ...el.attributes, id: el.id }, data_pokemons: el.attributes.pokemons, data_trainer  })}
-                            } 
+                            key={i}
+                            trainer_name={findTrainer(el, teams.included).name}
                             pokemons={el.attributes.pokemons}
-                        />
+                        >
+                            <AiOutlineEdit
+                            
+                                onClick={() =>  {
+                                    const trainer = findTrainer(el, teams.included)
+                                    history.push('/team/' + el.id, { data_team: el, data_pokemons: el.attributes.pokemons, data_trainer: trainer })}
+                                } 
+                                size="1em"
+                                style={{ cursor: 'pointer', position: 'absolute', top: '0', right: '0', margin: '15px 35px 0px 0px' }}
+                            />
+                            <AiOutlineDelete 
+                                onClick={() => requestDelete('teams', el.id)}
+                                size="1em"
+                                style={{ cursor: 'pointer', position: 'absolute', top: '0', right: '0', margin: '15px 15px 0px 0px' }}
+                            />
+                        </TeamPortrait>
+
                     )}
                 </PortraitsLayout>
             }
 
             {contentType === 'trainers' && 
                 <PortraitsLayout>
-                    {!loading && feed.data && feed.data.length > 0 && feed.data[0].type === 'trainer' && feed.data.map((el, i) =>
+                    {!loading && trainers.data && trainers.data.length > 0 && trainers.data.map((el, i) =>
                         <TrainerPortrait
+                            key={i}
                             name={el.attributes.name}
                             image={el.attributes.image}
                         />

@@ -39,7 +39,7 @@ const PokemonsContainer = styled.div`
     }
 `
 
-export const TeamPortrait = ({ trainer_image, trainer_name, pokemons, onClickComp = () => {}, onClickPokemon = () => {}, isEditing = false }) => {
+export const TeamPortrait = ({ trainer_image, trainer_name, pokemons, onClickComp = () => {}, onClickPokemon = () => {}, isEditing = false, children }) => {
 
 
     return (
@@ -51,7 +51,7 @@ export const TeamPortrait = ({ trainer_image, trainer_name, pokemons, onClickCom
             </TrainerContainer>
             <PokemonsContainer>
 
-                {pokemons !== undefined && pokemons.map((el, i) => (
+                {pokemons !== undefined && pokemons.length > 0 && pokemons.map((el, i) => (
                     <>
                         <Pokemon 
                             image={el.front_sprite}
@@ -71,7 +71,7 @@ export const TeamPortrait = ({ trainer_image, trainer_name, pokemons, onClickCom
                 }
 
             </PokemonsContainer>
-            {/* { enableExclude && <AiOutlineDelete size="2em" style={{ cursor: 'pointer', position: 'absolute', top: '0', right: '0', margin: '15px 15px 0px 0px' }}/> } */}
+            { children }
         </Container>
     )
 }

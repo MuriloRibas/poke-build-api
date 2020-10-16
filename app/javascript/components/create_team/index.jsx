@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import styled from 'styled-components';
 import { TeamPortrait } from '../team_portrait/index';
 import { BsSearch } from 'react-icons/bs'
-import Axios from 'axios';
 import { Pokemon } from '../common/pokemon';
+import { DataContext } from '../../routes/index';
+import { BtnPrimary } from '../common/buttons';
 
 const Container = styled.div`
-  
+    position: relative;
+    & > :last-child {
+        position: absolute;
+        right: 0;
+        margin: 50px 0px;
+    }
 `;
 
 const Input = styled.input`
@@ -22,23 +28,24 @@ const Label = styled.label`
     align-items: center;
 `
 
-export const ManageTeam = ({ trainer_name, trainer_image, data, team, searchPokemon, add, remove, submit }) => {
+export const ManageTeam = ({ trainer_name, trainer_image, submit, isEditing = false, dataToUpdate = [], add = () =>{}, remove = () =>{}, searchPokemon = () =>{},  }) => {
+    const { data, addToTeam, removeToTeam, requestSearchPokemon } = useContext(DataContext)
 
     const [search, setSearch] = useState('')
 
     useEffect(() => {
-        if (search.length > 0 && !data.some(e => e.name === search)) {
-            searchPokemon(search)
+        if (search.length > 0 && !data.data.some(e => e.name === search)) {
+            requestSearchPokemon(search)
         }
     }, [search])
 
     return (
         <Container>
             <TeamPortrait
-                pokemons={team}
+                pokemons={dataToUpdate.length > 0 ? dataToUpdate : data.team}
                 trainer_name={trainer_name}
                 trainer_image={trainer_image}
-                onClickPokemon={(name) => remove(name)}
+                onClickPokemon={(name) => dataToUpdate.length > 0 ? remove(name) : removeToTeam(name)}
                 isEditing
             />
 
@@ -55,12 +62,12 @@ export const ManageTeam = ({ trainer_name, trainer_image, data, team, searchPoke
 
             <div>
                 {
-                    data
+                    data.data
                         .filter(el => el.name === search)
                         .map((el2, i) => (
                             <Pokemon 
                                 image={el2.front_sprite}
-                                onClick={(e) => add(el2.name, el2.type, el2.front_sprite)}
+                                onClick={(e) => dataToUpdate.length > 0 ? add(el2.name, el2.type, el2.front_sprite) : addToTeam(el2.name, el2.type, el2.front_sprite)}
                                 add_animation
                                 key={i}
                             >
@@ -70,7 +77,7 @@ export const ManageTeam = ({ trainer_name, trainer_image, data, team, searchPoke
                 }
             </div>
 
-            <button onClick={submit}>Pronto</button>
+            <BtnPrimary onClick={submit}>Pronto</BtnPrimary>
         </Container>
     )
 }

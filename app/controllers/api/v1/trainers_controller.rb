@@ -7,7 +7,7 @@ module Api
             protect_from_forgery with: :null_session
 
             def index
-                trainers = Trainer.all
+                trainers = Trainer.all 
                 
                 render json: serializer(trainers, @@options)
             end

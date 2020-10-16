@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 import { TeamPortrait } from '../../components/team_portrait/index';
 import { ManageTeam } from '../../components/create_team/index';
 import Axios from 'axios'
@@ -15,23 +15,27 @@ export const Container = styled.div`
 
 export const Team = () => {
 
-    const [data, setData] = useState([])
+    // const [data, setData] = useState([])
     const [dataTeam, setDataTeam] = useState({})
     const [dataPokemons, setDataPokemons] = useState([])
     const [dataTrainer, setDataTrainer] = useState({})
 
     const location = useLocation()
+    const history = useHistory()
 
     const addToTeam = (name, type, front_sprite) => setDataPokemons([...dataPokemons, { name, type, front_sprite }]) 
-    const removeToTeam = (name) => setDataPokemons(dataPokemons.filter(el => el.name !== name)) 
+    const removeToTeam = (name) => {
+        console.log('removeToTeam')
+        setDataPokemons(dataPokemons.filter(el => el.name !== name)) 
+    }
 
-    const requestSearchPokemon = (pokemon) => {
-        Axios.get('https://pokeapi.co/api/v2/pokemon/' + pokemon)
-            .then(res => 
-                setData([...data, { name: res.data.name, front_sprite: res.data.sprites.front_default, type: res.data.types[0].type.name }])
-            )
-            .catch(err => console.log('Erro!'))
-    } 
+    // const requestSearchPokemon = (pokemon) => {
+    //     Axios.get('https://pokeapi.co/api/v2/pokemon/' + pokemon)
+    //         .then(res => 
+    //             setData([...data, { name: res.data.name, front_sprite: res.data.sprites.front_default, type: res.data.types[0].type.name }])
+    //         )
+    //         .catch(err => console.log('Erro!'))
+    // } 
 
     const submit = () => {
         Axios.put('http://localhost:3000/api/v1/teams/' + dataTeam.id, {
@@ -43,9 +47,13 @@ export const Team = () => {
     }
 
     useEffect(() => {
-        setDataTeam(location.state.data_team)
-        setDataPokemons(location.state.data_pokemons)
-        setDataTrainer(location.state.data_trainer)
+        if (location.state) {
+            setDataTeam(location.state.data_team)
+            setDataPokemons(location.state.data_pokemons)
+            setDataTrainer(location.state.data_trainer)
+        } else {
+            history.push('/')
+        }
     }, [])
 
     return (
@@ -53,11 +61,9 @@ export const Team = () => {
             <ManageTeam
                 trainer_name={dataTrainer.name}
                 trainer_image={dataTrainer.image}
-                data={data}
-                team={dataPokemons}
+                dataToUpdate={dataPokemons}
                 remove={removeToTeam}
                 add={addToTeam}
-                searchPokemon={requestSearchPokemon}
                 submit={submit}
             />
         </Container>

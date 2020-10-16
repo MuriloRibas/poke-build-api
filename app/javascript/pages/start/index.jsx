@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import styled from 'styled-components';
 import CreateTrainer from '../../components/create_trainer';
 import { ManageTeam } from '../../components/create_team/index';
 import { IoMdArrowBack } from 'react-icons/io'
 import Axios from 'axios';
+import { DataContext } from '../../routes/index';
 
 const Container = styled.div` 
     display: flex;
@@ -15,37 +16,24 @@ const Container = styled.div`
 
 
 export const Start = () => {
+    const { data, addToTeam, removeToTeam, requestSearchPokemon } = useContext(DataContext)
 
     const [step, setStep] = useState(1)
     const [inputs, setInputs] = useState(localStorage.getItem('trainer') || {
         name: '',
         age: 18,
         gender: 'Male',
-        file: ''
+        image: ''
     })
-
-    const [data, setData] = useState([])
-    const [team, setTeam] = useState([])
-
-    const addToTeam = (name, type, front_sprite) => setTeam([...team, { name, type, front_sprite }]) 
-    const removeToTeam = (name) => setTeam(team.filter(el => el.name !== name)) 
-
-    const requestSearchPokemon = (pokemon) => {
-        Axios.get('https://pokeapi.co/api/v2/pokemon/' + pokemon)
-            .then(res => 
-                setData([...data, { name: res.data.name, front_sprite: res.data.sprites.front_default, type: res.data.types[0].type.name }])
-            )
-            .catch(err => console.log('Erro!'))
-    } 
 
     const handleSubmitNewTrainer = (e) => {
         e.preventDefault();
-        const { name, age, gender, file } = inputs
+        const { name, age, gender, image } = inputs
         Axios.post('http://localhost:3000/api/v1/trainers/', {
             name,
             age,
             gender,
-            file
+            image
         })
             .then(res => {
                 setLocalstorageJsonData('trainer', { ...res.data.data.attributes, id: res.data.data.id })    
@@ -58,7 +46,7 @@ export const Start = () => {
     const handleNewTeam = (e) => {
         Axios.post('http://localhost:3000/api/v1/teams', {
             trainer_id: JSON.parse(localStorage.getItem('trainer')).id,
-            pokemons: team
+            pokemons: data.team
         })
             .then(res => alert('Equipe criada com sucesso!'))
             .catch(err => console.log('erro>>: ', err))
@@ -66,20 +54,6 @@ export const Start = () => {
     }
 
     const setLocalstorageJsonData = (key, val) => localStorage.setItem(key, JSON.stringify(val))
-
-
-    
-    useEffect(() => {
-        if (data.length > 0) {
-            setLocalstorageJsonData('data', data)
-        }
-    }, [data])
-
-    useEffect(() => {
-        if (team.length > 0) {
-            setLocalstorageJsonData('team', team)
-        }
-    }, [team])
 
     useEffect(() => {
         if (step > 1) {
@@ -95,14 +69,6 @@ export const Start = () => {
         if (localStorage.getItem('trainer')) {
             setInputs(JSON.parse(localStorage.getItem('trainer')))
         }
-
-        if (localStorage.getItem('data') !== null && localStorage.getItem('data') !== "" && localStorage.getItem('data') !== undefined) {
-            setData(JSON.parse(localStorage.getItem('data')))
-        }
-        
-        if (localStorage.getItem('team') !== null && localStorage.getItem('team') !== "" && localStorage.getItem('team') !== undefined) {
-            setTeam(JSON.parse(localStorage.getItem('team')))
-        }
     }, [])
 
     return (
@@ -114,7 +80,6 @@ export const Start = () => {
                     gender={inputs.gender}
                     image={inputs.image}
                     change={e => setInputs({ ...inputs, [e.target.name]: e.target.value })}
-                    changeFile={e => setInputs({ ...inputs, [e.target.name]: e.target.files })}
                     submit={handleSubmitNewTrainer}
                 />
             }
@@ -130,11 +95,6 @@ export const Start = () => {
                     <ManageTeam
                         trainer_name={inputs.name}
                         trainer_image={inputs.image}
-                        team={team}
-                        data={data}
-                        searchPokemon={requestSearchPokemon}
-                        add={addToTeam}
-                        remove={removeToTeam}
                         submit={handleNewTeam}
                     />
                     
